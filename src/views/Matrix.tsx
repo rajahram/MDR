@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import type { TraceRow } from "../data/types";
-import { buildTraceRows, LAYER_META } from "../lib/trace";
+import { buildTraceRows, LAYER_META, type TraceRow } from "../lib/trace";
 import { useStore } from "../state/store";
 import { GapChip, IconDownload, OriginBadge, RoleBadge, SectionLabel, TflChip, download } from "../components/ui";
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type SVGProps } from "react";
-import type { SdtmOrigin, SdtmRole } from "../data/types";
+
 import { useStore } from "../state/store";
 
 /* ───────────────────────── icons ───────────────────────── */
@@ -123,14 +123,14 @@ export function Logo({ size = 26 }: { size?: number }) {
 }
 
 /* ───────────────────────── badges ───────────────────────── */
-const roleColor: Record<SdtmRole, string> = {
+const roleColor: Record<string, string> = {
   IDENTIFIER: "text-[#c9b3ff] border-[#c9b3ff4d] bg-[#c9b3ff14]",
   TOPIC: "text-sdtm border-sdtm/40 bg-sdtm/10",
   TIMING: "text-tfl border-tfl/40 bg-tfl/10",
   QUALIFIER: "text-dim border-line bg-raise/60",
 };
 
-export function RoleBadge({ role }: { role: SdtmRole }) {
+export function RoleBadge({ role }: { role: string }) {
   return (
     <span className={`inline-flex items-center rounded-sm border px-1.5 py-px font-mono text-[9.5px] font-medium tracking-wide ${roleColor[role]}`}>
       {role.slice(0, 5)}
@@ -138,14 +138,14 @@ export function RoleBadge({ role }: { role: SdtmRole }) {
   );
 }
 
-const originColor: Record<SdtmOrigin, string> = {
+const originColor: Record<string, string> = {
   CRF: "text-crf border-crf/40 bg-crf/10",
   ASSIGNED: "text-[#9fb6ff] border-[#9fb6ff40] bg-[#9fb6ff12]",
   DERIVED: "text-adam border-adam/40 bg-adam/10",
   PREDECESSOR: "text-dim border-line bg-raise/60",
 };
 
-export function OriginBadge({ origin }: { origin: SdtmOrigin | "SDTM" }) {
+export function OriginBadge({ origin }: { origin: string }) {
   const cls = origin === "SDTM" ? "text-sdtm border-sdtm/40 bg-sdtm/10" : originColor[origin];
   return (
     <span className={`inline-flex items-center rounded-sm border px-1.5 py-px font-mono text-[9.5px] font-medium tracking-wide ${cls}`}>

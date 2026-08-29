@@ -6,8 +6,16 @@ import type {
   Selection,
   SdtmVar,
   Tfl,
-  TraceRow,
 } from "../data/types";
+
+export interface TraceRow {
+  key: string;
+  crf?: CrfField;
+  sdtm?: SdtmVar;
+  adam?: AdamVar;
+  tfls: Tfl[];
+  gap?: "CRF_NOT_MAPPED" | "SDTM_NOT_IN_ADAM" | "ADAM_NO_TFL";
+}
 
 export const LAYER_META: Record<
   LayerKey,

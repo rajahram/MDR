@@ -86,7 +86,7 @@ function Group({
 }
 
 export default function Explorer() {
-  const { state, selection, select, setModalOpen } = useStore();
+  const { state, selection, select, setView } = useStore();
   const [qCrf, setQCrf] = useState("");
   const [qSdtm, setQSdtm] = useState("");
   const [qAdam, setQAdam] = useState("");
@@ -321,11 +321,11 @@ export default function Explorer() {
       </div>
 
       <button
-        onClick={() => setModalOpen(true)}
+        onClick={() => setView("variables")}
         className="group fixed bottom-5 right-6 z-40 flex items-center gap-2 rounded-full border border-sdtm/40 bg-[#0d2b26] px-4 py-2.5 text-[12.5px] font-semibold text-sdtm shadow-xl shadow-black/50 transition-all hover:-translate-y-0.5 hover:border-sdtm hover:shadow-sdtm/10"
       >
         <IconPlus size={14} className="transition-transform group-hover:rotate-90" />
-        Add mapping
+        New variable
       </button>
     </div>
   );

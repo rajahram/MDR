@@ -2,13 +2,21 @@ import initSqlJs from "sql.js";
 import type { Database, SqlJsStatic, SqlValue } from "sql.js";
 import wasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 
-const STORAGE_KEY = "trace-mdr-master:db:v1";
+const STORAGE_KEY = "trace-mdr-master:db:v2";
 
 let sqlPromise: Promise<SqlJsStatic> | null = null;
 
 export function loadSql(): Promise<SqlJsStatic> {
   if (!sqlPromise) {
-    sqlPromise = initSqlJs({ locateFile: () => wasmUrl });
+    // Wrap so synchronous throws from the glue code become rejections
+    // instead of uncaught effect errors that unmount the whole tree.
+    sqlPromise = new Promise<SqlJsStatic>((resolve, reject) => {
+      try {
+        initSqlJs({ locateFile: () => wasmUrl }).then(resolve, reject);
+      } catch (err) {
+        reject(err);
+      }
+    });
   }
   return sqlPromise;
 }
@@ -51,6 +59,22 @@ export function restoreDb(SQL: SqlJsStatic): Database | null {
 
 export function clearStoredDb(): void {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem("trace-mdr-master:db:v1");
+}
+
+/** Self-healing check: a restored file must expose the full master schema. */
+export function validateDb(db: Database): boolean {
+  const tables = [
+    "studies", "domains", "variables", "variable_versions", "ct_codelists",
+    "ct_terms", "vlm", "crf_pages", "crf_fields", "map_c2s", "map_s2a",
+    "tfls", "dispositions", "releases", "audit_trail",
+  ];
+  try {
+    for (const t of tables) db.exec(`SELECT 1 FROM ${t} LIMIT 1`);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /* ── query helpers ─────────────────────────────────────────────── */

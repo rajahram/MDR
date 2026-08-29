@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { StoreProvider, useStore, type ViewKey } from "./state/store";
 import { ACTORS } from "./db/sqlite";
 import { LAYER_META, searchAll } from "./lib/trace";
@@ -101,8 +101,104 @@ function GlobalSearch() {
   );
 }
 
+function BootPane() {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setSlow(true), 6000);
+    return () => window.clearTimeout(t);
+  }, []);
+  return (
+    <div className="relative flex h-screen items-center justify-center overflow-hidden">
+      <div className="pointer-events-none fixed inset-0">
+        <div className="bg-grid absolute inset-0" />
+        <div className="orb left-[-140px] top-[-120px] h-[420px] w-[420px] bg-[#38c7a6] opacity-[0.07]" />
+      </div>
+      <div className="relative flex flex-col items-center gap-4">
+        <div className="pulse-dot"><Logo size={44} /></div>
+        <div className="text-center">
+          <p className="font-display text-[18px] font-bold">TRACE·MDR</p>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.24em] text-faint">
+            compiling SQLite WASM · seeding master repository…
+          </p>
+          {slow && (
+            <p className="anim-fade mx-auto mt-4 max-w-[380px] rounded-md border border-adam/40 bg-adam/10 px-4 py-2.5 text-left font-mono text-[10px] leading-relaxed text-adam">
+              Still compiling. If this persists, the sandbox may be blocking WebAssembly or the
+              sql-wasm.wasm asset — check the browser console and reload.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BootErrorPane({ message, onReseed }: { message: string; onReseed: () => void }) {
+  return (
+    <div className="relative flex h-screen items-center justify-center overflow-hidden p-6">
+      <div className="pointer-events-none fixed inset-0">
+        <div className="bg-grid absolute inset-0" />
+        <div className="orb left-[-140px] top-[-120px] h-[420px] w-[420px] bg-[#f27059] opacity-[0.08]" />
+      </div>
+      <div className="anim-fade relative w-full max-w-[460px] rounded-lg border border-crf/45 bg-panel/90 p-7 shadow-2xl shadow-black/60">
+        <p className="font-mono text-[9.5px] uppercase tracking-[0.22em] text-crf">boot failure · SQLite engine</p>
+        <h1 className="mt-2 font-display text-[22px] font-bold leading-snug">The master repository could not start</h1>
+        <p className="mt-3 break-words rounded-md border border-line/70 bg-abyss/70 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-dim">
+          {message}
+        </p>
+        <p className="mt-3 text-[11.5px] leading-relaxed text-faint">
+          The in-browser database (sql.js WASM) failed to compile, seed or restore. Reseeding rebuilds
+          the validated baseline; nothing audited outside this browser is affected.
+        </p>
+        <div className="mt-5 flex gap-2">
+          <button
+            onClick={onReseed}
+            className="rounded-md bg-sdtm px-4 py-2.5 text-[12.5px] font-bold text-[#04211b] transition-all hover:-translate-y-px hover:brightness-110"
+          >
+            Reseed repository
+          </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="rounded-md border border-line px-4 py-2.5 text-[12.5px] font-semibold text-dim transition-colors hover:border-line hover:text-ink"
+          >
+            Reload page
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+class Boundary extends Component<{ children: ReactNode }, { error: string | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(err: unknown) {
+    return { error: err instanceof Error ? err.message : String(err) };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="flex min-h-[60vh] items-center justify-center p-8">
+          <div className="anim-fade w-full max-w-[440px] rounded-lg border border-crf/45 bg-panel/90 p-6 text-center shadow-2xl shadow-black/50">
+            <p className="font-mono text-[9.5px] uppercase tracking-[0.22em] text-crf">rendering error</p>
+            <p className="mt-2 break-words font-mono text-[11px] leading-relaxed text-dim">{this.state.error}</p>
+            <button
+              onClick={() => this.setState({ error: null })}
+              className="mt-4 rounded-md border border-line px-4 py-2 text-[12px] font-semibold text-dim transition-colors hover:border-sdtm/50 hover:text-sdtm"
+            >
+              Dismiss & retry
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function Shell() {
-  const { ready, view, setView, study, setStudy, studies, actor, setActor, resetDb, db } = useStore();
+  const { ready, bootError, view, setView, study, setStudy, studies, actor, setActor, resetDb, db } = useStore();
   const [arm, setArm] = useState(false);
   useEffect(() => {
     if (!arm) return;
@@ -110,25 +206,8 @@ function Shell() {
     return () => window.clearTimeout(t);
   }, [arm]);
 
-  if (!ready || !db) {
-    return (
-      <div className="relative flex h-screen items-center justify-center overflow-hidden">
-        <div className="pointer-events-none fixed inset-0">
-          <div className="bg-grid absolute inset-0" />
-          <div className="orb left-[-140px] top-[-120px] h-[420px] w-[420px] bg-[#38c7a6] opacity-[0.07]" />
-        </div>
-        <div className="relative flex flex-col items-center gap-4">
-          <div className="pulse-dot"><Logo size={44} /></div>
-          <div className="text-center">
-            <p className="font-display text-[18px] font-bold">TRACE·MDR</p>
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.24em] text-faint">
-              compiling SQLite WASM · seeding master repository…
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (bootError) return <BootErrorPane message={bootError} onReseed={resetDb} />;
+  if (!ready || !db) return <BootPane />;
 
   return (
     <div className="relative flex h-screen flex-col overflow-hidden">
@@ -246,19 +325,21 @@ function Shell() {
           </nav>
 
           <main className={view === "explorer" ? "min-h-0 min-w-0 flex-1" : "min-h-0 min-w-0 flex-1 overflow-y-auto"}>
-            <div key={view} className={view === "explorer" ? "h-full" : "view-enter"}>
-              {view === "dashboard" && <Dashboard />}
-              {view === "explorer" && <div className="view-enter h-full"><Explorer /></div>}
-              {view === "matrix" && <Matrix />}
-              {view === "gaps" && <Gaps />}
-              {view === "domains" && <Domains />}
-              {view === "variables" && <Variables />}
-              {view === "terminology" && <Terminology />}
-              {view === "vlm" && <Vlm />}
-              {view === "crf" && <CrfRegistry />}
-              {view === "versions" && <Versions />}
-              {view === "audit" && <AuditTrail />}
-            </div>
+            <Boundary key={view}>
+              <div className={view === "explorer" ? "h-full" : "view-enter"}>
+                {view === "dashboard" && <Dashboard />}
+                {view === "explorer" && <div className="view-enter h-full"><Explorer /></div>}
+                {view === "matrix" && <Matrix />}
+                {view === "gaps" && <Gaps />}
+                {view === "domains" && <Domains />}
+                {view === "variables" && <Variables />}
+                {view === "terminology" && <Terminology />}
+                {view === "vlm" && <Vlm />}
+                {view === "crf" && <CrfRegistry />}
+                {view === "versions" && <Versions />}
+                {view === "audit" && <AuditTrail />}
+              </div>
+            </Boundary>
           </main>
         </div>
       </div>

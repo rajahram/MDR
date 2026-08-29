@@ -41,8 +41,9 @@ CREATE TABLE IF NOT EXISTS crf_pages (
   page_name TEXT, form_type TEXT, repeating TEXT, status TEXT, effective_from TEXT
 );
 CREATE TABLE IF NOT EXISTS crf_fields (
-  oid TEXT PRIMARY KEY, study_id TEXT, page_id TEXT, label TEXT, data_type TEXT,
-  required INTEGER, codelist TEXT, status TEXT, version TEXT
+  oid TEXT, study_id TEXT, page_id TEXT, label TEXT, data_type TEXT,
+  required INTEGER, codelist TEXT, status TEXT, version TEXT,
+  PRIMARY KEY (study_id, oid)
 );
 CREATE TABLE IF NOT EXISTS map_c2s (
   id INTEGER PRIMARY KEY AUTOINCREMENT, study_id TEXT, src TEXT, tgt TEXT, method TEXT
@@ -51,10 +52,12 @@ CREATE TABLE IF NOT EXISTS map_s2a (
   id INTEGER PRIMARY KEY AUTOINCREMENT, study_id TEXT, src TEXT, tgt TEXT, method TEXT
 );
 CREATE TABLE IF NOT EXISTS tfls (
-  code TEXT PRIMARY KEY, study_id TEXT, kind TEXT, title TEXT, adam_vars TEXT, status TEXT, version TEXT
+  code TEXT, study_id TEXT, kind TEXT, title TEXT, adam_vars TEXT, status TEXT, version TEXT,
+  PRIMARY KEY (study_id, code)
 );
 CREATE TABLE IF NOT EXISTS dispositions (
-  crf_oid TEXT PRIMARY KEY, study_id TEXT, reason TEXT
+  crf_oid TEXT, study_id TEXT, reason TEXT,
+  PRIMARY KEY (study_id, crf_oid)
 );
 CREATE TABLE IF NOT EXISTS releases (
   id INTEGER PRIMARY KEY AUTOINCREMENT, study_id TEXT, version TEXT, type TEXT, released_at TEXT,

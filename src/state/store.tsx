@@ -4,7 +4,7 @@ import type {
   AdamVar, CrfField, CrfFieldRow, CrfGap, MdrState, Selection, SdtmVar, Status, Tfl, VariableRow,
 } from "../data/types";
 import { STATUS_FLOW } from "../data/types";
-import { ACTORS, all, clearStoredDb, get, loadSql, nowIso, persistDb, restoreDb, run } from "../db/sqlite";
+import { ACTORS, all, clearStoredDb, get, loadSql, nowIso, persistDb, restoreDb, run, validateDb } from "../db/sqlite";
 import { seedDatabase } from "../db/schema";
 
 export type ViewKey =
@@ -31,6 +31,7 @@ interface AuditInput {
 
 interface StoreValue {
   ready: boolean;
+  bootError: string | null;
   db: Database | null;
   v: number;
   state: MdrState;
@@ -152,17 +153,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [actor, setActorState] = useState<string>(() => localStorage.getItem("trace-mdr:actor") ?? ACTORS[0]);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
+  const [bootError, setBootError] = useState<string | null>(null);
+
   const boot = useCallback(async (fresh = false) => {
-    const SQL = await loadSql();
-    let next: Database | null = null;
-    if (!fresh) next = restoreDb(SQL);
-    if (!next) {
-      next = new SQL.Database();
-      seedDatabase(next);
-      persistDb(next);
+    setBootError(null);
+    try {
+      const SQL = await loadSql();
+      let next: Database | null = null;
+      if (!fresh) {
+        next = restoreDb(SQL);
+        // Self-heal: a restored file that lost the schema is discarded and reseeded.
+        if (next && !validateDb(next)) {
+          next = null;
+          clearStoredDb();
+        }
+      }
+      if (!next) {
+        next = new SQL.Database();
+        seedDatabase(next);
+        persistDb(next);
+      }
+      setDb(next);
+      setV((x) => x + 1);
+    } catch (err) {
+      setBootError(err instanceof Error ? err.message : String(err));
     }
-    setDb(next);
-    setV((x) => x + 1);
   }, []);
 
   useEffect(() => {
@@ -273,18 +288,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("trace-mdr:actor", a);
   }, []);
 
-  const state = useMemo<MdrState>(
-    () => (db ? buildModel(db, study) : { crfFields: [], sdtmVars: [], adamVars: [], tfls: [], crfGaps: [] }),
-    [db, v, study],
-  );
+  const state = useMemo<MdrState>(() => {
+    if (!db) return { crfFields: [], sdtmVars: [], adamVars: [], tfls: [], crfGaps: [] };
+    try {
+      return buildModel(db, study);
+    } catch (err) {
+      // Never let a query failure crash the render tree.
+      console.error("buildModel failed:", err);
+      return { crfFields: [], sdtmVars: [], adamVars: [], tfls: [], crfGaps: [] };
+    }
+  }, [db, v, study]);
 
-  const studies = useMemo(
-    () => (db ? all<{ study_id: string; study_name: string }>(db, "SELECT study_id, study_name FROM studies ORDER BY study_id") : []),
-    [db, v],
-  );
+  const studies = useMemo(() => {
+    if (!db) return [];
+    try {
+      return all<{ study_id: string; study_name: string }>(db, "SELECT study_id, study_name FROM studies ORDER BY study_id");
+    } catch {
+      return [];
+    }
+  }, [db, v]);
 
   const value: StoreValue = {
-    ready: !!db, db, v, state, view, setView, selection, select,
+    ready: !!db, bootError, db, v, state, view, setView, selection, select,
     study, setStudy, studies, actor, setActor, toasts, toast, dismissToast,
     mutate, transitionStatus, bumpVersion, createVariable, resetDb,
   };

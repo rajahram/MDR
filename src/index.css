@@ -1,26 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  /* ── Light theme surfaces ── */
-  --color-abyss: #eef2f6;
-  --color-deep:  #f7f9fb;
+  /* Amgen Accelerate-aligned light theme */
+  --color-abyss: #f3f6f9;
+  --color-deep:  #f8fafc;
   --color-panel: #ffffff;
-  --color-raise: #e8eef4;
-  --color-line:  #c8d6e2;
-  --color-ink:   #0f2030;
-  --color-dim:   #3d5a72;
-  --color-faint: #7a95a8;
+  --color-raise: #eef3f7;
+  --color-line:  #d5e0e8;
+  --color-ink:   #172533;
+  --color-dim:   #465b6d;
+  --color-faint: #6f8292;
 
-  /* ── Brand / accent (high-contrast for light surfaces) ── */
-  --color-crf:  #9a5a02;
-  --color-sdtm: #057a66;
-  --color-adam: #b83814;
-  --color-tfl:  #2152b0;
-  --color-good: #1e7e15;
+  /* Amgen Blue is the primary brand accent; other colors are semantic only. */
+  --color-crf:  #b54708;
+  --color-sdtm: #0063c3;
+  --color-adam: #840b55;
+  --color-tfl:  #151f6d;
+  --color-good: #168a31;
 
-  --font-display: "Space Grotesk", "IBM Plex Sans", sans-serif;
-  --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
-  --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
+  --font-display: "Poppins", "Segoe UI", sans-serif;
+  --font-body: "Poppins", "Segoe UI", sans-serif;
+  --font-mono: "Roboto Mono", "SFMono-Regular", Consolas, monospace;
 }
 
 html,
@@ -34,11 +34,26 @@ body {
   background-color: var(--color-abyss);
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
+  font-size: 14px;
 }
 
 ::selection {
-  background: rgba(11, 158, 132, 0.22);
-  color: #001a14;
+  background: rgba(0, 99, 195, 0.2);
+  color: #071d35;
+}
+
+button,
+input,
+select,
+textarea { font: inherit; }
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #0063c3;
+  outline-offset: 2px;
 }
 
 /* ---------- scrollbars ---------- */
@@ -53,9 +68,9 @@ body {
 
 /* ---------- ambient background ---------- */
 .bg-grid {
-  background-image: radial-gradient(rgba(11, 158, 132, 0.09) 1px, transparent 1px);
-  background-size: 26px 26px;
-  mask-image: radial-gradient(ellipse 90% 70% at 50% 20%, black 30%, transparent 78%);
+  background-image: linear-gradient(rgba(0, 99, 195, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 99, 195, 0.025) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 @keyframes orbDrift {
@@ -126,7 +141,7 @@ body {
 .tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
 .tbl th {
   text-align: left;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: "Roboto Mono", "SFMono-Regular", Consolas, monospace;
   font-size: 9.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -139,8 +154,8 @@ body {
 .tbl thead th { position: sticky; top: 0; background: var(--color-panel); z-index: 2; box-shadow: 0 1px 0 var(--color-line); }
 .tbl td { padding: 9px 12px; border-bottom: 1px solid var(--color-line); vertical-align: middle; }
 .tbl tbody tr { transition: background 0.15s ease; }
-.tbl tbody tr:hover { background: rgba(11, 158, 132, 0.06); }
-.tbl tbody tr.is-active { background: rgba(11, 158, 132, 0.10); outline: 1px solid rgba(11, 158, 132, 0.22); }
+.tbl tbody tr:hover { background: rgba(0, 99, 195, 0.055); }
+.tbl tbody tr.is-active { background: rgba(0, 99, 195, 0.10); outline: 1px solid rgba(0, 99, 195, 0.22); }
 
 /* right drawer */
 .drawer { animation: drawer-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
@@ -153,7 +168,7 @@ body {
 .seg { display: inline-flex; border: 1px solid var(--color-line); border-radius: 6px; overflow: hidden; }
 .seg button {
   padding: 5px 11px;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: "Roboto Mono", "SFMono-Regular", Consolas, monospace;
   font-size: 10.5px;
   letter-spacing: 0.06em;
   color: var(--color-dim);
@@ -163,7 +178,7 @@ body {
 }
 .seg button:last-child { border-right: none; }
 .seg button:hover { color: var(--color-ink); background: var(--color-raise); }
-.seg button.on { background: rgba(11, 158, 132, 0.12); color: var(--color-sdtm); font-weight: 600; }
+.seg button.on { background: rgba(0, 99, 195, 0.10); color: var(--color-sdtm); font-weight: 600; }
 
 /* shared field controls */
 .field-input {
@@ -177,7 +192,7 @@ body {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   box-sizing: border-box;
 }
-.field-input:focus { border-color: var(--color-sdtm); box-shadow: 0 0 0 2px rgba(11, 158, 132, 0.14); }
+.field-input:focus { border-color: var(--color-sdtm); box-shadow: 0 0 0 3px rgba(0, 99, 195, 0.12); }
 .field-input::placeholder { color: var(--color-faint); }
 select.field-input {
   appearance: none;
@@ -188,3 +203,11 @@ select.field-input {
   background-position: right 8px center;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

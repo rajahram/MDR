@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import type { CodelistRow, CtTermRow } from "../data/types";
 import { all, count } from "../db/sqlite";
 import { useStore } from "../state/store";
-import { fmtDate, IconTag, PageHeader, ReasonModal, Seg, StatusBadge, StatusModal, VerChip } from "../components/gxp";
-import { IconPlus, IconSearch, Modal } from "../components/ui";
+import { fmtDate, IconTag, PageHeader, Seg, StatusBadge, StatusModal, VerChip } from "../components/gxp";
+import { IconPlus, IconSearch, IconX, Modal } from "../components/ui";
 
 export default function Terminology() {
   const { db, v, transitionStatus, mutate, toast, setView } = useStore();
@@ -68,7 +68,7 @@ export default function Terminology() {
     return `${c.code} ${c.name} ${c.source}`.toLowerCase().includes(qq);
   });
 
-  const code = activeCode ?? filtered[0]?.code ?? null;
+  const code = activeCode;
   const terms = useMemo(
     () => (db && code ? all<CtTermRow>(db, "SELECT * FROM ct_terms WHERE codelist=? ORDER BY order_number", [code]) : []),
     [db, v, code],
@@ -101,9 +101,9 @@ export default function Terminology() {
         <Seg options={["ALL", "CDASH", "SDTM", "ADaM"] as const} value={std} onChange={(s) => setStd(s)} />
       </PageHeader>
 
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+      <div className="grid items-start gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
         {/* codelist list */}
-        <div className="rounded-lg border border-line bg-panel shadow-sm">
+        <div className={`${activeCode ? "order-last" : "order-first"} rounded-lg border border-line bg-panel shadow-sm lg:order-first`}>
           <div className="border-b border-line p-3">
             <div className="relative">
               <IconSearch size={13} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-faint" />
@@ -130,6 +130,7 @@ export default function Terminology() {
                         ? "border-crf/60 bg-crf/10 shadow-xs"
                         : "border-transparent hover:border-line hover:bg-raise/60"
                     }`}
+                    aria-selected={on}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-[12px] font-bold text-crf">{c.code}</span>
@@ -167,10 +168,10 @@ export default function Terminology() {
           </ul>
         </div>
 
-        {/* terms panel */}
-        <div className="min-w-0">
+        {/* terms side view */}
+        <div className={`${activeCode ? "order-first" : "order-last"} min-w-0 lg:order-last`}>
           {meta ? (
-            <div className="rounded-lg border border-line bg-panel shadow-sm">
+            <aside className="drawer rounded-lg border border-line bg-panel shadow-sm lg:sticky lg:top-3" aria-label={`${meta.code} controlled terminology terms`}>
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-4">
                 <div>
                   <div className="flex items-center gap-2.5">
@@ -247,15 +248,25 @@ export default function Terminology() {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={() => setAdding(true)}
-                  className="flex items-center gap-1.5 rounded-md border border-crf/40 bg-crf/10 px-3 py-2 text-[11.5px] font-semibold text-crf transition-all hover:-translate-y-px hover:bg-crf/20 cursor-pointer"
-                >
-                  <IconPlus size={13} /> Add term
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setAdding(true)}
+                    className="flex items-center gap-1.5 rounded-md border border-crf/40 bg-crf/10 px-3 py-2 text-[11.5px] font-semibold text-crf transition-all hover:-translate-y-px hover:bg-crf/20 cursor-pointer"
+                  >
+                    <IconPlus size={13} /> Add term
+                  </button>
+                  <button
+                    onClick={() => setActiveCode(null)}
+                    className="rounded-md border border-line p-2 text-dim transition-colors hover:border-sdtm/40 hover:text-ink"
+                    title="Close terms side view"
+                    aria-label="Close terms side view"
+                  >
+                    <IconX size={13} />
+                  </button>
+                </div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="max-h-[calc(100vh-310px)] overflow-auto" tabIndex={0}>
                 <table className="tbl min-w-[640px]">
                   <thead>
                     <tr>
@@ -290,9 +301,9 @@ export default function Terminology() {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </aside>
           ) : (
-            <p className="rounded-lg border border-line bg-panel p-6 text-center text-[12px] text-faint shadow-sm">No codelist selected.</p>
+            <p className="rounded-lg border border-dashed border-line bg-panel p-8 text-center text-[12px] text-faint shadow-sm">Select a codelist to view its permitted terms.</p>
           )}
         </div>
       </div>

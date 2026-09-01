@@ -3,7 +3,7 @@ import type { DomainRow, Status, VariableRow } from "../data/types";
 import { all, count } from "../db/sqlite";
 import { useStore } from "../state/store";
 import { IconLayers, PageHeader, Seg, StatusBadge, StatusModal, VerChip, fmtDate } from "../components/gxp";
-import { IconSearch, IconX, Modal } from "../components/ui";
+import { IconSearch, IconX } from "../components/ui";
 import { RoleBadge, OriginBadge } from "../components/ui";
 
 /* ── Purpose badge ─────────────────────────────────────────── */
@@ -50,8 +50,8 @@ function ClassChip({ cls }: { cls: string }) {
   );
 }
 
-/* ── Variables popup ────────────────────────────────────────── */
-function VariablesPopup({ domain, onClose }: { domain: DomainRow; onClose: () => void }) {
+/* ── Variables side view ────────────────────────────────────── */
+function VariablesSideView({ domain, onClose }: { domain: DomainRow; onClose: () => void }) {
   const { db, study } = useStore();
   const vars = useMemo(() => {
     if (!db) return [];
@@ -70,7 +70,10 @@ function VariablesPopup({ domain, onClose }: { domain: DomainRow; onClose: () =>
   const others = vars.filter((v) => !roleOrder.includes(v.role));
 
   return (
-    <Modal onClose={onClose} width={820}>
+    <aside
+      className="drawer order-first min-w-0 self-start overflow-hidden rounded-lg border border-line bg-panel shadow-lg lg:order-last lg:sticky lg:top-3"
+      aria-label={`${domain.code} domain variables`}
+    >
       <div className="border-b border-line px-6 py-4">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -99,7 +102,7 @@ function VariablesPopup({ domain, onClose }: { domain: DomainRow; onClose: () =>
         </div>
       </div>
 
-      <div className="px-6 py-4">
+      <div className="max-h-[calc(100vh-190px)] overflow-y-auto px-6 py-4" tabIndex={0}>
         <p className="mb-3 font-mono text-[9.5px] uppercase tracking-[0.16em] text-faint">
           Variables · {vars.length} total
         </p>
@@ -148,7 +151,7 @@ function VariablesPopup({ domain, onClose }: { domain: DomainRow; onClose: () =>
           </table>
         </div>
       </div>
-    </Modal>
+    </aside>
   );
 }
 
@@ -160,7 +163,7 @@ export default function Domains() {
   const [q, setQ] = useState("");
   const [modal, setModal] = useState<DomainRow | null>(null);
   const [reason, setReason] = useState("");
-  const [varsPopup, setVarsPopup] = useState<DomainRow | null>(null);
+  const [activeDomain, setActiveDomain] = useState<DomainRow | null>(null);
 
   const rows = useMemo(() => {
     if (!db) return [];
@@ -222,8 +225,9 @@ export default function Domains() {
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-line bg-panel shadow-sm">
-        <table className="tbl min-w-[960px]">
+      <div className={activeDomain ? "grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(440px,0.85fr)]" : ""}>
+        <div className="min-w-0 overflow-x-auto rounded-lg border border-line bg-panel shadow-sm">
+          <table className="tbl min-w-[960px]">
           <thead>
             <tr>
               <th>Domain</th>
@@ -245,9 +249,10 @@ export default function Domains() {
               return (
                 <tr
                   key={r.id}
-                  className="cursor-pointer"
-                  onClick={() => setVarsPopup(r)}
+                  className={`cursor-pointer ${activeDomain?.id === r.id ? "is-active" : ""}`}
+                  onClick={() => setActiveDomain(r)}
                   title="Click to view all variables"
+                  aria-selected={activeDomain?.id === r.id}
                 >
                   <td>
                     <span className="font-mono text-[13px] font-bold" style={{ color: r.standard === "CDASH" ? "#b8720a" : r.standard === "SDTM" ? "#0b9e84" : "#c44b28" }}>
@@ -296,11 +301,12 @@ export default function Domains() {
               );
             })}
           </tbody>
-        </table>
-      </div>
+          </table>
+        </div>
 
-      {/* Variables popup */}
-      {varsPopup && <VariablesPopup domain={varsPopup} onClose={() => setVarsPopup(null)} />}
+        {/* Variables side view */}
+        {activeDomain && <VariablesSideView domain={activeDomain} onClose={() => setActiveDomain(null)} />}
+      </div>
 
       {/* Status transition modal */}
       {modal && (

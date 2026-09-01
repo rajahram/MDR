@@ -111,7 +111,7 @@ function BootPane() {
     <div className="relative flex h-screen items-center justify-center overflow-hidden">
       <div className="pointer-events-none fixed inset-0">
         <div className="bg-grid absolute inset-0" />
-        <div className="orb left-[-140px] top-[-120px] h-[420px] w-[420px] bg-[#38c7a6] opacity-[0.07]" />
+        <div className="orb left-[-140px] top-[-120px] h-[420px] w-[420px] bg-sdtm opacity-[0.08]" />
       </div>
       <div className="relative flex flex-col items-center gap-4">
         <div className="pulse-dot"><Logo size={44} /></div>
@@ -121,7 +121,7 @@ function BootPane() {
             compiling SQLite WASM · seeding master repository…
           </p>
           {slow && (
-            <p className="anim-fade mx-auto mt-4 max-w-[380px] rounded-md border border-adam/40 bg-adam/10 px-4 py-2.5 text-left font-mono text-[10px] leading-relaxed text-adam">
+            <p className="anim-fade mx-auto mt-4 max-w-[380px] rounded-md border border-crf/40 bg-crf/10 px-4 py-2.5 text-left font-mono text-[10px] leading-relaxed text-crf">
               Still compiling. If this persists, the sandbox may be blocking WebAssembly or the
               sql-wasm.wasm asset — check the browser console and reload.
             </p>
@@ -198,7 +198,7 @@ class Boundary extends Component<{ children: ReactNode }, { error: string | null
 }
 
 function Shell() {
-  const { ready, bootError, view, setView, study, setStudy, studies, actor, setActor, resetDb, db } = useStore();
+  const { ready, bootError, view, setView, actor, setActor, resetDb, db } = useStore();
   const [arm, setArm] = useState(false);
   useEffect(() => {
     if (!arm) return;
@@ -214,13 +214,13 @@ function Shell() {
       {/* ambient background */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="bg-grid absolute inset-0" />
-        <div className="orb left-[-140px] top-[-120px] h-[420px] w-[420px] bg-[#38c7a6] opacity-[0.07]" />
-        <div className="orb bottom-[-160px] right-[-120px] h-[460px] w-[460px] bg-[#f2ac3c] opacity-[0.06]" style={{ animationDelay: "-8s" }} />
-        <div className="orb bottom-[10%] left-[30%] h-[300px] w-[300px] bg-[#f27059] opacity-[0.045]" style={{ animationDelay: "-14s" }} />
+        <div className="orb left-[-140px] top-[-120px] h-[420px] w-[420px] bg-sdtm opacity-[0.06]" />
+        <div className="orb bottom-[-160px] right-[-120px] h-[460px] w-[460px] bg-crf opacity-[0.05]" style={{ animationDelay: "-8s" }} />
+        <div className="orb bottom-[10%] left-[30%] h-[300px] w-[300px] bg-adam opacity-[0.03]" style={{ animationDelay: "-14s" }} />
       </div>
 
       {/* top bar */}
-      <header className="relative z-20 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-line/80 bg-deep/80 px-4 py-3 backdrop-blur-sm sm:px-6">
+      <header className="relative z-20 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-panel/95 px-4 py-3 backdrop-blur-sm shadow-sm sm:px-6">
         <button onClick={() => setView("dashboard")} className="flex items-center gap-2.5 transition-opacity hover:opacity-85">
           <Logo size={28} />
           <span className="leading-none">
@@ -240,12 +240,6 @@ function Shell() {
 
         <div className="ml-auto flex items-center gap-2">
           <div className="hidden md:block"><GlobalSearch /></div>
-          <label className="flex items-center gap-1.5">
-            <span className="hidden font-mono text-[8.5px] uppercase tracking-[0.14em] text-faint xl:block">study</span>
-            <select value={study} onChange={(e) => setStudy(e.target.value)} className="field-input w-[110px] py-1.5 font-mono text-[11px] font-semibold text-sdtm">
-              {studies.map((s) => <option key={s.study_id} value={s.study_id}>{s.study_id}</option>)}
-            </select>
-          </label>
           <label className="hidden items-center gap-1.5 sm:flex">
             <span className="hidden font-mono text-[8.5px] uppercase tracking-[0.14em] text-faint xl:block">actor</span>
             <select value={actor} onChange={(e) => setActor(e.target.value)} className="field-input w-[190px] py-1.5 font-mono text-[10.5px]" title="Signed-in user — attributed on every audited action">
@@ -258,7 +252,7 @@ function Shell() {
               else setArm(true);
             }}
             className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-[10px] transition-all ${
-              arm ? "border-adam/60 bg-adam/15 text-adam" : "border-line/80 text-dim hover:border-line hover:text-ink"
+              arm ? "border-adam/60 bg-adam/15 text-adam" : "border-line text-dim hover:border-line hover:text-ink"
             }`}
             title="Reset demo data"
           >
@@ -270,7 +264,7 @@ function Shell() {
 
       <div className="relative z-10 flex min-h-0 flex-1">
         {/* sidebar */}
-        <aside className="hidden w-[190px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-line/80 bg-deep/60 p-3 md:flex">
+        <aside className="hidden w-[190px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-panel/80 p-3 md:flex shadow-sm">
           {NAV.map((g) => (
             <nav key={g.group}>
               <p className="mb-1 px-2 font-mono text-[8.5px] uppercase tracking-[0.2em] text-faint">{g.group}</p>
@@ -282,7 +276,7 @@ function Shell() {
                       <button
                         onClick={() => setView(n.key)}
                         className={`group relative flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[12px] font-medium transition-all ${
-                          active ? "bg-raise text-ink" : "text-dim hover:bg-panel/70 hover:text-ink"
+                          active ? "bg-sdtm/10 text-ink shadow-sm" : "text-dim hover:bg-raise hover:text-ink"
                         }`}
                       >
                         <span className={`absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r transition-all ${active ? "bg-sdtm" : "bg-transparent group-hover:bg-line"}`} />
@@ -296,7 +290,7 @@ function Shell() {
             </nav>
           ))}
 
-          <div className="mt-auto rounded-md border border-line/60 bg-panel/40 p-3">
+          <div className="mt-auto rounded-md border border-line bg-raise/60 p-3">
             <p className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
               <IconDb size={11} className="text-sdtm" /> SQLite store
             </p>
@@ -309,13 +303,13 @@ function Shell() {
 
         {/* mobile nav */}
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-line/80 bg-deep/60 px-3 py-2 md:hidden">
+          <nav className="flex shrink-0 gap-1 overflow-x-auto border-b border-line bg-panel/80 px-3 py-2 md:hidden">
             {NAV.flatMap((g) => g.items).map((n) => (
               <button
                 key={n.key}
                 onClick={() => setView(n.key)}
                 className={`flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-[11px] font-medium transition-colors ${
-                  view === n.key ? "bg-raise text-ink" : "text-dim hover:text-ink"
+                  view === n.key ? "bg-sdtm/10 text-ink" : "text-dim hover:text-ink"
                 }`}
               >
                 {n.icon}

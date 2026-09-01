@@ -8,9 +8,9 @@ import { download, IconSearch } from "../components/ui";
 const ACTION_TONE: Record<string, string> = {
   CREATE: "bg-sdtm/15 text-sdtm",
   TRANSITION: "bg-adam/15 text-adam",
-  VERSION: "bg-[#c9b3ff1f] text-[#c9b3ff]",
+  VERSION: "bg-[#7a4f9b1f] text-[#7a4f9b]",
   EXPORT: "bg-tfl/15 text-tfl",
-  IMPORT: "bg-[#7fb7e61f] text-[#7fb7e6]",
+  IMPORT: "bg-good/15 text-good",
   UPDATE: "bg-raise text-dim",
 };
 
@@ -37,9 +37,9 @@ export default function AuditTrail() {
 
   const exportCsv = () => {
     const esc = (s: string) => `"${(s ?? "").replace(/"/g, '""')}"`;
-    const head = "id,timestamp,actor,action,entity,record,field,old_value,new_value,reason,study";
+    const head = "id,timestamp,actor,action,entity,record,field,old_value,new_value,reason";
     const body = filtered.map((r) =>
-      [String(r.id), r.ts, r.actor, r.action, r.entity, r.record, r.field, r.old_value, r.new_value, r.reason, r.study_id].map(esc).join(","));
+      [String(r.id), r.ts, r.actor, r.action, r.entity, r.record, r.field, r.old_value, r.new_value, r.reason].map(esc).join(","));
     download(`TRACE-MDR_audit_${new Date().toISOString().slice(0, 10)}.csv`, [head, ...body].join("\n"));
     mutate(() => undefined, { action: "EXPORT", entity: "audit_trail", record: `audit_trail.csv (${filtered.length} rows)`, field: "—", old_value: "", new_value: "file", reason: "Audit trail export", study_id: "GLOBAL" });
     toast("success", `${filtered.length} audit events exported to CSV.`);
@@ -54,16 +54,16 @@ export default function AuditTrail() {
       >
         <button
           onClick={exportCsv}
-          className="flex items-center gap-1.5 rounded-md border border-line/80 px-3 py-2 text-[12px] font-semibold text-dim transition-all hover:-translate-y-px hover:border-sdtm/50 hover:text-sdtm"
+          className="flex items-center gap-1.5 rounded-md border border-line bg-panel px-3 py-2 text-[12px] font-semibold text-dim transition-all hover:-translate-y-px hover:border-sdtm/50 hover:text-sdtm shadow-xs cursor-pointer"
         >
           <svg viewBox="0 0 24 24" width={13} height={13} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
           Export CSV
         </button>
       </PageHeader>
 
-      <div className="mb-3 flex items-center gap-2 rounded-md border border-[#f2ac3c30] bg-[#f2ac3c0a] px-3.5 py-2.5">
-        <span className="pulse-dot h-2 w-2 shrink-0 rounded-full bg-[#f2ac3c]" />
-        <p className="font-mono text-[10.5px] text-[#f2ac3c]">
+      <div className="mb-3 flex items-center gap-2 rounded-md border border-crf/30 bg-crf/8 px-3.5 py-2.5">
+        <span className="pulse-dot h-2 w-2 shrink-0 rounded-full bg-crf" />
+        <p className="font-mono text-[10.5px] text-crf font-semibold">
           21 CFR Part 11 §11.10(e) — secure, time-ordered, operator-attributed record. Retention: life of the master MDR + 15 years.
         </p>
       </div>
@@ -82,7 +82,7 @@ export default function AuditTrail() {
         <span className="ml-auto font-mono text-[10px] text-faint">{filtered.length} of {rows.length} events</span>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-line bg-deep/60">
+      <div className="overflow-x-auto rounded-lg border border-line bg-panel shadow-sm">
         <table className="tbl min-w-[1000px]">
           <thead>
             <tr>
@@ -93,7 +93,6 @@ export default function AuditTrail() {
               <th>Record</th>
               <th>Change</th>
               <th>Reason</th>
-              <th>Study</th>
             </tr>
           </thead>
           <tbody>
@@ -122,7 +121,6 @@ export default function AuditTrail() {
                 <td className="max-w-[240px]">
                   <span className="block truncate text-[10.5px] text-dim" title={r.reason}>“{r.reason}”</span>
                 </td>
-                <td className="font-mono text-[10px] text-faint">{r.study_id}</td>
               </tr>
             ))}
           </tbody>

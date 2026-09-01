@@ -11,7 +11,7 @@ function Ring({ pct, color, label }: { pct: number; color: string; label: string
   return (
     <div className="flex flex-col items-center gap-2">
       <svg width="88" height="88" viewBox="0 0 88 88">
-        <circle cx="44" cy="44" r={r} fill="none" stroke="#133340" strokeWidth="7" />
+        <circle cx="44" cy="44" r={r} fill="none" stroke="#d1dce6" strokeWidth="7" />
         <circle
           cx="44"
           cy="44"
@@ -52,7 +52,7 @@ function GapItem({
   return (
     <button
       onClick={() => select({ kind, id }, true)}
-      className="node-item group flex w-full items-start gap-3 rounded-md border border-line/60 bg-panel/50 px-3.5 py-2.5 text-left hover:border-line"
+      className="node-item group flex w-full items-start gap-3 rounded-md border border-line bg-raise/50 px-3.5 py-2.5 text-left hover:border-line hover:bg-raise cursor-pointer"
     >
       <span className="mt-0.5 shrink-0 font-mono text-[11px] font-semibold" style={{ color: meta.color }}>
         {code}
@@ -77,7 +77,7 @@ export default function Gaps() {
   return (
     <div className="mx-auto flex max-w-[1180px] flex-col gap-6 px-6 pb-16 pt-8">
       <div>
-        <SectionLabel color="#f2ac3c">Gap Analysis</SectionLabel>
+        <SectionLabel color="#b8720a">Gap Analysis</SectionLabel>
         <h1 className="mt-1.5 font-display text-[26px] font-bold tracking-tight">Where the chain breaks — and where it may</h1>
         <p className="mt-1 max-w-[700px] text-[13px] text-dim">
           A gap is only a problem when it is undocumented. Each item below either needs a mapping, a
@@ -85,20 +85,20 @@ export default function Gaps() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center justify-around gap-6 rounded-xl border border-line bg-deep/70 px-6 py-5">
+      <div className="flex flex-wrap items-center justify-around gap-6 rounded-xl border border-line bg-panel px-6 py-5 shadow-sm">
         <Ring pct={cov.crfPct} color={LAYER_META.crf.color} label="CRF → SDTM" />
         <Ring pct={cov.sdtmPct} color={LAYER_META.sdtm.color} label="SDTM → ADaM" />
         <Ring pct={cov.adamPct} color={LAYER_META.adam.color} label="ADaM → TFL" />
         <div className="max-w-[260px] text-[11.5px] leading-relaxed text-faint">
           <p className="mb-1 font-mono text-[9.5px] uppercase tracking-[0.16em] text-dim">Reading the rings</p>
           100% is rarely the target — assigned identifiers and derived terms legitimately skip layers.
-          The target is <span className="text-ink">0 undocumented gaps</span>.
+          The target is <span className="text-ink font-semibold">0 undocumented gaps</span>.
         </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
         {/* CRF not mapped */}
-        <div ref={ref1} className="reveal flex flex-col gap-3 rounded-xl border border-line bg-deep/70 p-5">
+        <div ref={ref1} className="reveal flex flex-col gap-3 rounded-xl border border-line bg-panel p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-[15px] font-bold text-crf">Collected, not mapped</h2>
             <span className="rounded-sm bg-crf/15 px-2 py-0.5 font-mono text-[10.5px] font-semibold text-crf">{gaps.crfNotMapped.length}</span>
@@ -120,7 +120,7 @@ export default function Gaps() {
         </div>
 
         {/* SDTM dead ends */}
-        <div ref={ref2} className="reveal flex flex-col gap-3 rounded-xl border border-line bg-deep/70 p-5">
+        <div ref={ref2} className="reveal flex flex-col gap-3 rounded-xl border border-line bg-panel p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-[15px] font-bold text-sdtm">SDTM dead ends</h2>
             <span className="rounded-sm bg-sdtm/15 px-2 py-0.5 font-mono text-[10.5px] font-semibold text-sdtm">{gaps.sdtmNotInAdam.length}</span>
@@ -137,7 +137,7 @@ export default function Gaps() {
         </div>
 
         {/* ADaM unused */}
-        <div ref={ref3} className="reveal flex flex-col gap-3 rounded-xl border border-line bg-deep/70 p-5">
+        <div ref={ref3} className="reveal flex flex-col gap-3 rounded-xl border border-line bg-panel p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-[15px] font-bold text-adam">Analysis vars, no TFL</h2>
             <span className="rounded-sm bg-adam/15 px-2 py-0.5 font-mono text-[10.5px] font-semibold text-adam">{gaps.adamNoTfl.length}</span>

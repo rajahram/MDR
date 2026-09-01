@@ -63,7 +63,7 @@ export default function Matrix() {
     toast("success", `Exported ${filtered.length} trace rows to CSV.`);
   };
 
-  const sel = "rounded-md border border-line/80 bg-abyss/60 px-2.5 py-1.5 font-mono text-[11px] text-ink outline-none transition-colors focus:border-sdtm/60";
+  const sel = "rounded-md border border-line bg-panel px-2.5 py-1.5 font-mono text-[11px] text-ink outline-none transition-colors focus:border-sdtm/60 cursor-pointer";
 
   return (
     <div className="mx-auto flex max-w-[1280px] flex-col gap-4 px-6 pb-16 pt-8">
@@ -77,7 +77,7 @@ export default function Matrix() {
         </div>
         <button
           onClick={exportCsv}
-          className="flex items-center gap-2 rounded-md border border-line bg-panel px-4 py-2.5 text-[12.5px] font-medium text-ink transition-all hover:border-sdtm/50 hover:bg-raise"
+          className="flex items-center gap-2 rounded-md border border-line bg-panel px-4 py-2.5 text-[12.5px] font-medium text-ink transition-all hover:border-sdtm/50 hover:bg-raise shadow-xs cursor-pointer"
         >
           <IconDownload size={14} className="text-sdtm" />
           Export CSV ({filtered.length})
@@ -85,7 +85,7 @@ export default function Matrix() {
       </div>
 
       {/* filter bar */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-deep/70 p-3">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-line bg-panel p-3 shadow-xs">
         <select value={page} onChange={(e) => setPage(e.target.value)} className={sel} aria-label="CRF page filter">
           {pages.map((p) => (
             <option key={p} value={p}>{p === "ALL" ? "All CRF pages" : `CRF · ${p}`}</option>
@@ -105,12 +105,12 @@ export default function Matrix() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search variables, labels, rules…"
-          className="min-w-[220px] flex-1 rounded-md border border-line/80 bg-abyss/60 px-3 py-1.5 font-mono text-[11.5px] text-ink placeholder-faint outline-none transition-colors focus:border-sdtm/60"
+          className="min-w-[220px] flex-1 rounded-md border border-line bg-panel px-3 py-1.5 font-mono text-[11.5px] text-ink placeholder-faint outline-none transition-colors focus:border-sdtm/60"
         />
         <button
           onClick={() => setGapsOnly((g) => !g)}
-          className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 font-mono text-[10.5px] font-medium transition-all ${
-            gapsOnly ? "border-crf/60 bg-crf/15 text-crf" : "border-line/80 text-dim hover:border-line hover:text-ink"
+          className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 font-mono text-[10.5px] font-medium transition-all cursor-pointer ${
+            gapsOnly ? "border-crf/60 bg-crf/15 text-crf" : "border-line text-dim hover:border-line hover:text-ink"
           }`}
         >
           gaps only
@@ -119,10 +119,10 @@ export default function Matrix() {
       </div>
 
       {/* table */}
-      <div className="overflow-hidden rounded-lg border border-line bg-deep/70">
+      <div className="overflow-hidden rounded-lg border border-line bg-panel shadow-sm">
         <div className="max-h-[calc(100vh-320px)] overflow-auto">
           <table className="w-full border-collapse text-left">
-            <thead className="sticky top-0 z-10">
+            <thead className="sticky top-0 z-10 shadow-xs">
               <tr className="bg-panel">
                 {["CRF source", "SDTM target", "Origin", "ADaM variable", "Derivation rule", "TFLs"].map((h, i) => (
                   <th key={h} className={`whitespace-nowrap border-b border-line px-3.5 py-2.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.16em] ${i === 0 ? "text-crf" : i === 1 || i === 2 ? "text-sdtm" : i === 3 || i === 4 ? "text-adam" : "text-tfl"}`}>
@@ -135,7 +135,7 @@ export default function Matrix() {
               {shown.map((r, i) => (
                 <tr
                   key={r.key}
-                  className={`group cursor-pointer border-b border-line/40 transition-colors hover:bg-panel/70 ${i % 2 === 1 ? "bg-abyss/25" : ""}`}
+                  className={`group cursor-pointer border-b border-line/50 transition-colors hover:bg-raise/60 ${i % 2 === 1 ? "bg-raise/20" : ""}`}
                   onClick={() => {
                     const target = r.adam ?? r.sdtm ?? r.crf;
                     if (target) select({ kind: r.adam ? "adam" : r.sdtm ? "sdtm" : "crf", id: target.id }, true);

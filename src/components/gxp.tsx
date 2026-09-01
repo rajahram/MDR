@@ -37,20 +37,20 @@ export const IconFile = (p: IP) => (
 
 /* ── status lifecycle visuals ─────────────────────────────────── */
 export const STATUS_COLOR: Record<Status, string> = {
-  DRAFT: "#93a8ad",
-  "IN REVIEW": "#f2ac3c",
-  ACTIVE: "#38c7a6",
-  DEPRECATED: "#f27059",
+  DRAFT:       "#7a95a8",
+  "IN REVIEW": "#b8720a",
+  ACTIVE:      "#0b9e84",
+  DEPRECATED:  "#c44b28",
 };
 
 export function StatusBadge({ status, small = false }: { status: string; small?: boolean }) {
-  const c = STATUS_COLOR[status as Status] ?? "#93a8ad";
+  const c = STATUS_COLOR[status as Status] ?? "#7a95a8";
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-sm border font-mono font-semibold ${small ? "px-1.5 py-px text-[9px]" : "px-2 py-0.5 text-[10px]"}`}
-      style={{ color: c, borderColor: `${c}4d`, background: `${c}14`, letterSpacing: "0.08em" }}
+      style={{ color: c, borderColor: `${c}55`, background: `${c}14`, letterSpacing: "0.08em" }}
     >
-      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: c, boxShadow: status === "ACTIVE" ? `0 0 6px ${c}` : "none" }} />
+      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: c }} />
       {status}
     </span>
   );
@@ -58,7 +58,7 @@ export function StatusBadge({ status, small = false }: { status: string; small?:
 
 export function VerChip({ v }: { v: string }) {
   return (
-    <span className="rounded-sm border border-[#c9b3ff3d] bg-[#c9b3ff10] px-1.5 py-px font-mono text-[9.5px] font-semibold text-[#c9b3ff]">
+    <span className="rounded-sm border border-[#7a4f9b55] bg-[#7a4f9b14] px-1.5 py-px font-mono text-[9.5px] font-semibold text-[#7a4f9b]">
       v{v}
     </span>
   );
@@ -73,19 +73,24 @@ export function PageHeader({
 }: {
   icon: ReactNode;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   children?: ReactNode;
 }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <div className="flex items-center gap-2.5">
-          <span className="text-sdtm">{icon}</span>
-          <h1 className="font-display text-[24px] font-bold tracking-tight">{title}</h1>
-        </div>
-        <p className="mt-1 max-w-[640px] text-[12.5px] leading-relaxed text-dim">{subtitle}</p>
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line pb-2.5">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <span className="text-sdtm shrink-0">{icon}</span>
+        <h1 className="font-display text-[18px] font-bold tracking-tight text-ink whitespace-nowrap">{title}</h1>
+        {subtitle && (
+          <span
+            className="hidden xl:inline-block max-w-[580px] truncate border-l border-line pl-2.5 text-[11.5px] font-normal text-faint"
+            title={subtitle}
+          >
+            {subtitle}
+          </span>
+        )}
       </div>
-      {children && <div className="flex items-center gap-2">{children}</div>}
+      {children && <div className="flex items-center gap-2 shrink-0">{children}</div>}
     </div>
   );
 }
@@ -237,9 +242,9 @@ export function ReasonModal({
 }
 
 /* ── small stat card ──────────────────────────────────────────── */
-export function StatCard({ label, value, sub, color = "#38c7a6" }: { label: string; value: number; sub?: string; color?: string }) {
+export function StatCard({ label, value, sub, color = "#0b9e84" }: { label: string; value: number; sub?: string; color?: string }) {
   return (
-    <div className="group rounded-lg border border-line bg-deep/70 px-4 py-3.5 transition-all hover:-translate-y-0.5 hover:border-line/80 hover:shadow-lg hover:shadow-black/30">
+    <div className="group rounded-lg border border-line bg-panel px-4 py-3.5 shadow-xs transition-all hover:-translate-y-0.5 hover:border-line hover:shadow-md hover:shadow-slate-200/80">
       <p className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-faint">{label}</p>
       <p className="mt-1 font-display text-[26px] font-bold leading-none tabular" style={{ color }}>
         {value}

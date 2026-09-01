@@ -26,12 +26,14 @@ export interface StudyRow {
 export interface DomainRow {
   id: number;
   study_id: string;
-  standard: string; // SDTM | ADaM
+  standard: string; // CDASH | SDTM | ADaM
   code: string;
   name: string;
   description: string;
   structure: string;
   cls: string;
+  purpose: string;        // "Data Collection" | "Tabulation" | "Analysis"
+  key_variables: string;  // comma-separated IDENTIFIER var names
   version: string;
   status: Status;
   updated_at: string;
@@ -88,6 +90,8 @@ export interface CodelistRow {
   nci_code: string | null;
   source: string;
   version: string;
+  version_date: string;   // e.g. "2026-03-27"
+  extensible: string;     // "Yes" | "No"
   status: Status;
   updated_at: string;
 }

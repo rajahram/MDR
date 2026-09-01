@@ -124,16 +124,46 @@ export function Logo({ size = 26 }: { size?: number }) {
 
 /* ───────────────────────── badges ───────────────────────── */
 const roleColor: Record<string, string> = {
-  IDENTIFIER: "text-[#c9b3ff] border-[#c9b3ff4d] bg-[#c9b3ff14]",
-  TOPIC: "text-sdtm border-sdtm/40 bg-sdtm/10",
-  TIMING: "text-tfl border-tfl/40 bg-tfl/10",
-  QUALIFIER: "text-dim border-line bg-raise/60",
+  IDENTIFIER: "text-[#6941c6] border-[#6941c640] bg-[#6941c610]",
+  TOPIC: "text-[#057a66] border-[#057a6640] bg-[#057a6610]",
+  TIMING: "text-[#2152b0] border-[#2152b040] bg-[#2152b010]",
+  QUALIFIER: "text-dim border-line bg-raise/70",
+  "RECORD QUALIFIER": "text-[#0e6f66] border-[#0e6f6640] bg-[#0e6f6610]",
+  "VARIABLE QUALIFIER": "text-[#9a5a02] border-[#9a5a0240] bg-[#9a5a0210]",
+  "SYNONYM QUALIFIER": "text-[#2152b0] border-[#2152b040] bg-[#2152b010]",
+  "GROUPING QUALIFIER": "text-[#7a4f9b] border-[#7a4f9b40] bg-[#7a4f9b10]",
+  "RESULT QUALIFIER": "text-[#186a8e] border-[#186a8e40] bg-[#186a8e10]",
+  RULE: "text-[#b83814] border-[#b8381440] bg-[#b8381410]",
 };
 
+function formatRole(r: string): string {
+  const u = (r || "").toUpperCase();
+  if (u.includes("RECORD QUAL")) return "Record Qual";
+  if (u.includes("VARIABLE QUAL")) return "Var Qual";
+  if (u.includes("SYNONYM QUAL")) return "Synonym Qual";
+  if (u.includes("GROUPING QUAL")) return "Group Qual";
+  if (u.includes("RESULT QUAL")) return "Result Qual";
+  if (u.includes("IDENTIFIER")) return "Identifier";
+  if (u.includes("TOPIC")) return "Topic";
+  if (u.includes("TIMING")) return "Timing";
+  if (u.includes("QUALIFIER")) return "Qualifier";
+  if (u.includes("RULE")) return "Rule";
+  if (u.includes("POPULATION")) return "Pop Flag";
+  if (u.includes("FLAG")) return "Flag";
+  if (u.includes("TREATMENT")) return "Treatment";
+  if (u.includes("PARAMETER")) return "Param";
+  return r.length > 12 ? r.slice(0, 10) + "…" : r;
+}
+
 export function RoleBadge({ role }: { role: string }) {
+  const matchedKey = Object.keys(roleColor).find((k) => (role || "").toUpperCase().includes(k));
+  const cls = (matchedKey ? roleColor[matchedKey] : null) ?? "text-dim border-line bg-raise/70";
   return (
-    <span className={`inline-flex items-center rounded-sm border px-1.5 py-px font-mono text-[9.5px] font-medium tracking-wide ${roleColor[role]}`}>
-      {role.slice(0, 5)}
+    <span
+      className={`inline-flex items-center rounded-sm border px-1.5 py-px font-mono text-[9px] font-semibold tracking-wide ${cls}`}
+      title={`CDISC Role: ${role}`}
+    >
+      {formatRole(role)}
     </span>
   );
 }

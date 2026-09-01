@@ -2,7 +2,7 @@ import initSqlJs from "sql.js";
 import type { Database, SqlJsStatic, SqlValue } from "sql.js";
 import wasmUrl from "sql.js/dist/sql-wasm.wasm?url";
 
-const STORAGE_KEY = "trace-mdr-master:db:v2";
+const STORAGE_KEY = "trace-mdr-master:db:v7";
 
 let sqlPromise: Promise<SqlJsStatic> | null = null;
 
@@ -59,6 +59,7 @@ export function restoreDb(SQL: SqlJsStatic): Database | null {
 
 export function clearStoredDb(): void {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem("trace-mdr-master:db:v3");
   localStorage.removeItem("trace-mdr-master:db:v1");
 }
 
@@ -71,6 +72,8 @@ export function validateDb(db: Database): boolean {
   ];
   try {
     for (const t of tables) db.exec(`SELECT 1 FROM ${t} LIMIT 1`);
+    db.exec("SELECT purpose, key_variables FROM domains LIMIT 1");
+    db.exec("SELECT version_date, extensible FROM ct_codelists LIMIT 1");
     return true;
   } catch {
     return false;

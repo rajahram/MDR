@@ -40,8 +40,6 @@ interface StoreValue {
   selection: Selection | null;
   select: (sel: Selection | null, goExplorer?: boolean) => void;
   study: string;
-  setStudy: (s: string) => void;
-  studies: { study_id: string; study_name: string }[];
   actor: string;
   setActor: (a: string) => void;
   toasts: ToastItem[];
@@ -149,7 +147,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [v, setV] = useState(0);
   const [view, setView] = useState<ViewKey>("dashboard");
   const [selection, setSelection] = useState<Selection | null>(null);
-  const [study, setStudyState] = useState<string>(() => localStorage.getItem("trace-mdr:study") ?? "VX-201");
+  /* single global master repository — no study dimension */
+  const study = "GLOBAL";
   const [actor, setActorState] = useState<string>(() => localStorage.getItem("trace-mdr:actor") ?? ACTORS[0]);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
@@ -277,12 +276,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (sel && goExplorer) setView("explorer");
   }, []);
 
-  const setStudy = useCallback((s: string) => {
-    setStudyState(s);
-    localStorage.setItem("trace-mdr:study", s);
-    setSelection(null);
-  }, []);
-
   const setActor = useCallback((a: string) => {
     setActorState(a);
     localStorage.setItem("trace-mdr:actor", a);
@@ -299,18 +292,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [db, v, study]);
 
-  const studies = useMemo(() => {
-    if (!db) return [];
-    try {
-      return all<{ study_id: string; study_name: string }>(db, "SELECT study_id, study_name FROM studies ORDER BY study_id");
-    } catch {
-      return [];
-    }
-  }, [db, v]);
-
   const value: StoreValue = {
     ready: !!db, bootError, db, v, state, view, setView, selection, select,
-    study, setStudy, studies, actor, setActor, toasts, toast, dismissToast,
+    study, actor, setActor, toasts, toast, dismissToast,
     mutate, transitionStatus, bumpVersion, createVariable, resetDb,
   };
 

@@ -1,6 +1,7 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import type { LayerKey } from "../data/types";
 import { LAYER_META, adamConsumers, crfById, linkedSets, sdtmTargets, tflConsumers, grouped } from "../lib/trace";
+import { all } from "../db/sqlite";
 import { useStore } from "../state/store";
 import { FlowArrow, IconAlert, IconChevron, IconPlus, IconSearch, IconX, RoleBadge, OriginBadge, TflChip, GapChip } from "../components/ui";
 
@@ -23,8 +24,8 @@ function ColumnShell({
 }) {
   const meta = LAYER_META[layer];
   return (
-    <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-line bg-deep/70">
-      <header className="shrink-0 border-b border-line/80 px-4 pb-3 pt-3.5">
+    <section className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-line bg-panel shadow-sm">
+      <header className="shrink-0 border-b border-line px-4 pb-3 pt-3.5">
         <div className="flex items-center justify-between" style={{ borderTop: `2px solid ${meta.color}`, marginTop: -14, paddingTop: 10 }}>
           <h2 className="font-display text-[15px] font-bold tracking-wide">
             <span style={{ color: meta.color }}>{title}</span>
@@ -37,7 +38,7 @@ function ColumnShell({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={`Filter ${title.toLowerCase()}…`}
-            className="w-full rounded-md border border-line/80 bg-abyss/60 py-1.5 pl-8 pr-2.5 font-mono text-[11.5px] text-ink placeholder-faint outline-none transition-colors focus:border-line"
+            className="w-full rounded-md border border-line bg-panel py-1.5 pl-8 pr-2.5 font-mono text-[11.5px] text-ink placeholder-faint outline-none transition-colors focus:border-sdtm"
             style={{ caretColor: meta.color }}
           />
         </div>
@@ -71,31 +72,81 @@ function Group({
     <div className="mb-2">
       <button
         onClick={() => onToggle(k)}
-        className="group flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-panel/80"
+        className="group flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left transition-colors hover:bg-raise/60 cursor-pointer"
       >
-        <IconChevron size={10} className={`shrink-0 text-faint transition-transform duration-200 ${closed ? "" : "rotate-90"}`} />
-        <span className="font-mono text-[10.5px] font-semibold tracking-[0.14em]" style={{ color }}>
+        <IconChevron size={11} className={`shrink-0 text-faint transition-transform duration-200 ${closed ? "" : "rotate-90"}`} />
+        <span className="font-mono text-[12px] font-bold tracking-[0.12em]" style={{ color }}>
           {code}
         </span>
-        <span className="truncate text-[11.5px] text-dim">{title}</span>
-        <span className="ml-auto font-mono text-[9.5px] tabular text-faint">{count}</span>
+        <span className="truncate text-[12.5px] font-bold text-ink">{title}</span>
+        <span className="ml-auto rounded-sm bg-raise px-1.5 py-0.5 font-mono text-[10px] font-semibold tabular text-dim">{count}</span>
       </button>
-      {!closed && <div className="mt-1 flex flex-col gap-1 pl-1">{children}</div>}
+      {!closed && <div className="mt-1 flex flex-col gap-1.5 pl-1">{children}</div>}
     </div>
   );
 }
 
+const CORE_SDTM = new Set(["DM", "VS", "AE", "CM", "LB", "EX"]);
+const CORE_ADAM = new Set(["ADSL", "ADAE", "ADVS", "ADLB", "ADCM"]);
+
 export default function Explorer() {
-  const { state, selection, select, setView } = useStore();
+  const { state, selection, select, setView, db, v } = useStore();
   const [qCrf, setQCrf] = useState("");
   const [qSdtm, setQSdtm] = useState("");
   const [qAdam, setQAdam] = useState("");
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  const sdtmDomainNames = useMemo(() => {
+    if (!db) return new Map<string, string>();
+    const rows = all<{ code: string; name: string }>(db, "SELECT code, name FROM domains WHERE standard='SDTM'");
+    return new Map(rows.map((r) => [r.code, r.name]));
+  }, [db, v]);
+
+  const adamDatasetNames = useMemo(() => {
+    if (!db) return new Map<string, string>();
+    const rows = all<{ code: string; name: string }>(db, "SELECT code, name FROM domains WHERE standard='ADaM'");
+    return new Map(rows.map((r) => [r.code, r.name]));
+  }, [db, v]);
+
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    const set = new Set<string>();
+    // Pre-collapse non-core domains so rendering is instant
+    for (const v of state.sdtmVars) {
+      if (!CORE_SDTM.has(v.domain)) set.add(`sdtm:${v.domain}`);
+    }
+    for (const v of state.adamVars) {
+      if (!CORE_ADAM.has(v.dataset)) set.add(`adam:${v.dataset}`);
+    }
+    return set;
+  });
 
   const linked = useMemo(() => linkedSets(state, selection), [state, selection]);
   const crfMap = useMemo(() => crfById(state), [state]);
   const gapSet = useMemo(() => new Set(state.crfGaps.map((g) => g.crfFieldId)), [state]);
   const hasSel = !!selection;
+
+  // Auto-expand any domain that has selected or linked nodes
+  useEffect(() => {
+    if (!selection) return;
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+      for (const sid of linked.sdtm) {
+        const dom = sid.split(".")[0];
+        if (next.has(`sdtm:${dom}`)) {
+          next.delete(`sdtm:${dom}`);
+          changed = true;
+        }
+      }
+      for (const aid of linked.adam) {
+        const ds = aid.split(".")[0];
+        if (next.has(`adam:${ds}`)) {
+          next.delete(`adam:${ds}`);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [selection, linked]);
 
   const toggleCollapse = (k: string) =>
     setCollapsed((prev) => {
@@ -107,31 +158,32 @@ export default function Explorer() {
 
   const isActive = (kind: LayerKey, id: string) => selection?.kind === kind && selection.id === id;
   const dimCls = (kind: LayerKey, id: string) =>
-    `node-item w-full rounded-md border px-2.5 py-2 text-left ${
-      isActive(kind, id) ? "border-transparent" : "border-line/60 hover:border-line"
+    `node-item w-full rounded-md border px-3 py-2 text-left transition-all cursor-pointer shadow-xs ${
+      isActive(kind, id) ? "border-transparent ring-2" : "border-line bg-panel hover:border-slate-400 hover:bg-raise/30"
     } ${hasSel && !linked[kind].has(id) ? "is-dimmed" : ""}`;
 
   const itemStyle = (kind: LayerKey, id: string): CSSProperties => {
     const c = LAYER_META[kind].color;
     if (isActive(kind, id)) {
-      return { borderColor: c, background: `${c}14`, boxShadow: `0 0 0 1px ${c}55, 0 4px 18px ${c}1f` };
+      return { borderColor: c, background: `${c}15`, boxShadow: `0 0 0 1.5px ${c}, 0 4px 14px ${c}25` };
     }
-    return { background: "rgba(14,39,49,0.55)" };
+    return { background: "#ffffff" };
   };
 
   const match = (q: string, ...parts: (string | undefined)[]) =>
     q.trim() === "" || parts.some((p) => p?.toLowerCase().includes(q.trim().toLowerCase()));
 
   /* chain strip data */
-  const chainPairs: [LayerKey, Set<string>][] = [
-    ["crf", linked.crf],
-    ["sdtm", linked.sdtm],
-    ["adam", linked.adam],
-    ["tfl", linked.tfl],
-  ];
-  const chain = chainPairs
-    .filter(([, s]) => s.size > 0)
-    .map(([kind, s]) => ({ kind, items: [...s].map((id) => ({ id, title: id })) }));
+  const chain: { kind: LayerKey; items: { id: string; title: string }[] }[] = (
+    [
+      ["crf", [...linked.crf].map((id) => ({ id, title: id }))],
+      ["sdtm", [...linked.sdtm].map((id) => ({ id, title: id }))],
+      ["adam", [...linked.adam].map((id) => ({ id, title: id }))],
+      ["tfl", [...linked.tfl].map((id) => ({ id, title: id }))],
+    ] as [LayerKey, { id: string; title: string }[]][]
+  )
+    .map(([kind, items]) => ({ kind, items }))
+    .filter((g) => g.items.length > 0);
 
   const selDetail = useMemo(() => {
     if (!selection) return null;
@@ -154,7 +206,7 @@ export default function Explorer() {
   return (
     <div className="flex h-full min-h-0 flex-col gap-3 px-4 pb-4 pt-4 sm:px-6">
       {/* trace path strip */}
-      <div className="shrink-0 rounded-lg border border-line bg-deep/70 px-4 py-3">
+      <div className="shrink-0 rounded-lg border border-line bg-panel shadow-sm px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
           <p className="mr-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-faint">
             Trace path
@@ -237,13 +289,13 @@ export default function Explorer() {
                     return (
                       <button key={f.id} onClick={() => select(isActive("crf", f.id) ? null : { kind: "crf", id: f.id })} className={dimCls("crf", f.id)} style={itemStyle("crf", f.id)}>
                         <span className="flex items-center gap-2">
-                          <span className="font-mono text-[11.5px] font-semibold text-crf">{f.id}</span>
-                          {isGap && <IconAlert size={11} className="text-crf" />}
-                          <span className="ml-auto shrink-0 rounded-sm bg-crf/10 px-1.5 py-px font-mono text-[9.5px] text-crf">
+                          <span className="font-mono text-[12px] font-bold text-crf">{f.id}</span>
+                          {isGap && <IconAlert size={12} className="text-crf shrink-0" />}
+                          <span className="ml-auto shrink-0 rounded-sm bg-crf/12 px-1.5 py-0.5 font-mono text-[9.5px] font-semibold text-crf">
                             {isGap ? "not mapped" : `→ ${targets} SDTM`}
                           </span>
                         </span>
-                        <span className="mt-0.5 block truncate text-[11px] text-dim">{f.label}</span>
+                        <span className="mt-1 block truncate text-[11.5px] font-semibold text-ink">{f.label}</span>
                       </button>
                     );
                   })}
@@ -258,21 +310,21 @@ export default function Explorer() {
             const visible = vars.filter((v) => match(qSdtm, v.id, v.label));
             if (visible.length === 0) return null;
             return (
-              <Group key={domain} code={domain} title={`${domain} domain`} count={visible.length} k={`sdtm:${domain}`} collapsed={collapsed} onToggle={toggleCollapse} color={LAYER_META.sdtm.color}>
+              <Group key={domain} code={domain} title={sdtmDomainNames.get(domain) ?? `${domain} domain`} count={visible.length} k={`sdtm:${domain}`} collapsed={collapsed} onToggle={toggleCollapse} color={LAYER_META.sdtm.color}>
                 {visible.map((v) => {
                   const down = adamConsumers(state, v.id).length;
                   return (
                     <button key={v.id} onClick={() => select(isActive("sdtm", v.id) ? null : { kind: "sdtm", id: v.id })} className={dimCls("sdtm", v.id)} style={itemStyle("sdtm", v.id)}>
                       <span className="flex items-center gap-2">
-                        <span className="truncate font-mono text-[11.5px] font-semibold text-sdtm">{v.name}</span>
+                        <span className="truncate font-mono text-[12px] font-bold text-sdtm">{v.name}</span>
                         <RoleBadge role={v.role} />
                         <OriginBadge origin={v.origin} />
                       </span>
                       <span className="mt-1 flex items-center gap-1.5">
-                        <span className="truncate text-[11px] text-dim">{v.label}</span>
+                        <span className="truncate text-[11.5px] font-semibold text-ink">{v.label}</span>
                         <span className="ml-auto flex shrink-0 gap-1">
-                          <span className="rounded-sm bg-raise px-1.5 py-px font-mono text-[9.5px] text-faint">←{v.crfFieldIds.length}</span>
-                          <span className={`rounded-sm px-1.5 py-px font-mono text-[9.5px] ${down > 0 ? "bg-sdtm/10 text-sdtm" : "bg-adam/10 text-adam"}`}>
+                          <span className="rounded-sm bg-raise px-1.5 py-px font-mono text-[9.5px] font-medium text-dim">←{v.crfFieldIds.length}</span>
+                          <span className={`rounded-sm px-1.5 py-px font-mono text-[9.5px] font-semibold ${down > 0 ? "bg-sdtm/15 text-sdtm" : "bg-adam/15 text-adam"}`}>
                             {down > 0 ? `→${down}` : "dead end"}
                           </span>
                         </span>
@@ -291,17 +343,17 @@ export default function Explorer() {
             const visible = vars.filter((v) => match(qAdam, v.id, v.label));
             if (visible.length === 0) return null;
             return (
-              <Group key={ds} code={ds} title={vars[0].model === "ADSL" ? "subject-level" : vars[0].model === "BDS" ? "basic data structure" : "occurrence structure"} count={visible.length} k={`adam:${ds}`} collapsed={collapsed} onToggle={toggleCollapse} color={LAYER_META.adam.color}>
+              <Group key={ds} code={ds} title={adamDatasetNames.get(ds) ?? (vars[0].model === "ADSL" ? "Subject-Level Analysis" : vars[0].model === "BDS" ? "Basic Data Structure" : "Occurrence Structure")} count={visible.length} k={`adam:${ds}`} collapsed={collapsed} onToggle={toggleCollapse} color={LAYER_META.adam.color}>
                 {visible.map((v) => {
                   const tfls = tflConsumers(state, v.id);
                   return (
                     <button key={v.id} onClick={() => select(isActive("adam", v.id) ? null : { kind: "adam", id: v.id })} className={dimCls("adam", v.id)} style={itemStyle("adam", v.id)}>
                       <span className="flex items-center gap-2">
-                        <span className="truncate font-mono text-[11.5px] font-semibold text-adam">{v.name}</span>
+                        <span className="truncate font-mono text-[12px] font-bold text-adam">{v.name}</span>
                         <OriginBadge origin={v.origin} />
                         {tfls.length === 0 && <GapChip label="no TFL" tone="adam" />}
                       </span>
-                      <span className="mt-0.5 block truncate text-[11px] text-dim">{v.label}</span>
+                      <span className="mt-1 block truncate text-[11.5px] font-semibold text-ink">{v.label}</span>
                       <span className="mt-1 flex flex-wrap items-center gap-1">
                         {tfls.slice(0, 3).map((t) => (
                           <span key={t.id} onClick={(e) => { e.stopPropagation(); select({ kind: "tfl", id: t.id }); }} className="cursor-pointer">
@@ -309,7 +361,7 @@ export default function Explorer() {
                           </span>
                         ))}
                         {tfls.length > 3 && <span className="font-mono text-[9.5px] text-faint">+{tfls.length - 3}</span>}
-                        <span className="ml-auto rounded-sm bg-raise px-1.5 py-px font-mono text-[9.5px] text-faint">←{v.sdtmVarIds.length} SDTM</span>
+                        <span className="ml-auto rounded-sm bg-raise px-1.5 py-px font-mono text-[9.5px] font-medium text-dim">←{v.sdtmVarIds.length} SDTM</span>
                       </span>
                     </button>
                   );
@@ -322,7 +374,7 @@ export default function Explorer() {
 
       <button
         onClick={() => setView("variables")}
-        className="group fixed bottom-5 right-6 z-40 flex items-center gap-2 rounded-full border border-sdtm/40 bg-[#0d2b26] px-4 py-2.5 text-[12.5px] font-semibold text-sdtm shadow-xl shadow-black/50 transition-all hover:-translate-y-0.5 hover:border-sdtm hover:shadow-sdtm/10"
+        className="group fixed bottom-5 right-6 z-40 flex items-center gap-2 rounded-full border border-sdtm/40 bg-panel px-4 py-2.5 text-[12.5px] font-semibold text-sdtm shadow-lg shadow-slate-300/60 transition-all hover:-translate-y-0.5 hover:bg-raise hover:border-sdtm hover:shadow-xl cursor-pointer"
       >
         <IconPlus size={14} className="transition-transform group-hover:rotate-90" />
         New variable

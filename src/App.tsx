@@ -55,6 +55,7 @@ function GlobalSearch() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const hits = searchAll(state, q);
 
   useEffect(() => {
@@ -65,18 +66,44 @@ function GlobalSearch() {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setOpen(true);
+      }
+      if (e.key === "Escape") {
+        setOpen(false);
+        inputRef.current?.blur();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <div ref={boxRef} className="relative w-full max-w-[320px]">
       <IconSearch size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
       <input
+        ref={inputRef}
         value={q}
         onChange={(e) => { setQ(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        placeholder="Search OID, variable, TFL…"
-        className="w-full rounded-md border border-line/80 bg-abyss/60 py-2 pl-8 pr-3 font-mono text-[11px] text-ink placeholder-faint outline-none transition-colors focus:border-sdtm/60"
+        placeholder="Search all metadata"
+        aria-label="Search all metadata"
+        aria-expanded={open}
+        className="h-8 w-full rounded-md border border-line bg-white py-1.5 pl-8 pr-14 text-[11.5px] text-ink placeholder-faint outline-none transition-colors focus:border-sdtm"
       />
-      {open && hits.length > 0 && (
-        <div className="anim-fade absolute left-0 right-0 top-[calc(100%+6px)] z-50 overflow-hidden rounded-md border border-line bg-panel shadow-2xl shadow-black/60">
+      <kbd className="pointer-events-none absolute right-2.5 top-1/2 hidden -translate-y-1/2 rounded border border-line bg-raise px-1.5 py-0.5 font-mono text-[8.5px] text-faint lg:block">Ctrl K</kbd>
+      {open && q.trim() && (
+        <div className="anim-fade absolute left-0 right-0 top-[calc(100%+6px)] z-50 overflow-hidden rounded-md border border-line bg-panel shadow-2xl shadow-slate-300/50">
+          {hits.length === 0 && (
+            <div className="px-4 py-5 text-center">
+              <p className="text-[12px] font-semibold text-ink">No metadata found</p>
+              <p className="mt-1 text-[10.5px] text-faint">Try an OID, domain, variable, codelist, or TFL code.</p>
+            </div>
+          )}
           {hits.map((h) => {
             const meta = LAYER_META[h.kind];
             return (
@@ -109,14 +136,11 @@ function BootPane() {
   }, []);
   return (
     <div className="relative flex h-screen items-center justify-center overflow-hidden">
-      <div className="pointer-events-none fixed inset-0">
-        <div className="bg-grid absolute inset-0" />
-        <div className="orb left-[-140px] top-[-120px] h-[420px] w-[420px] bg-sdtm opacity-[0.08]" />
-      </div>
+      <div className="pointer-events-none fixed inset-0 bg-grid" />
       <div className="relative flex flex-col items-center gap-4">
         <div className="pulse-dot"><Logo size={44} /></div>
         <div className="text-center">
-          <p className="font-display text-[18px] font-bold">TRACE·MDR</p>
+          <p className="font-display text-[18px] font-bold">Clinical MDR</p>
           <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.24em] text-faint">
             compiling SQLite WASM · seeding master repository…
           </p>
@@ -135,10 +159,7 @@ function BootPane() {
 function BootErrorPane({ message, onReseed }: { message: string; onReseed: () => void }) {
   return (
     <div className="relative flex h-screen items-center justify-center overflow-hidden p-6">
-      <div className="pointer-events-none fixed inset-0">
-        <div className="bg-grid absolute inset-0" />
-        <div className="orb left-[-140px] top-[-120px] h-[420px] w-[420px] bg-[#f27059] opacity-[0.08]" />
-      </div>
+      <div className="pointer-events-none fixed inset-0 bg-grid" />
       <div className="anim-fade relative w-full max-w-[460px] rounded-lg border border-crf/45 bg-panel/90 p-7 shadow-2xl shadow-black/60">
         <p className="font-mono text-[9.5px] uppercase tracking-[0.22em] text-crf">boot failure · SQLite engine</p>
         <h1 className="mt-2 font-display text-[22px] font-bold leading-snug">The master repository could not start</h1>
@@ -210,39 +231,33 @@ function Shell() {
   if (!ready || !db) return <BootPane />;
 
   return (
-    <div className="relative flex h-screen flex-col overflow-hidden">
-      {/* ambient background */}
-      <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="bg-grid absolute inset-0" />
-        <div className="orb left-[-140px] top-[-120px] h-[420px] w-[420px] bg-sdtm opacity-[0.06]" />
-        <div className="orb bottom-[-160px] right-[-120px] h-[460px] w-[460px] bg-crf opacity-[0.05]" style={{ animationDelay: "-8s" }} />
-        <div className="orb bottom-[10%] left-[30%] h-[300px] w-[300px] bg-adam opacity-[0.03]" style={{ animationDelay: "-14s" }} />
-      </div>
+    <div className="relative flex h-screen flex-col overflow-hidden bg-abyss">
+      <div className="pointer-events-none fixed inset-0 z-0 bg-grid" />
 
       {/* top bar */}
-      <header className="relative z-20 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-panel/95 px-4 py-3 backdrop-blur-sm shadow-sm sm:px-6">
-        <button onClick={() => setView("dashboard")} className="flex items-center gap-2.5 transition-opacity hover:opacity-85">
-          <Logo size={28} />
+      <header className="relative z-20 flex min-h-14 shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-panel px-4 py-2 shadow-sm sm:px-5">
+        <button onClick={() => setView("dashboard")} className="flex items-center gap-2.5 rounded-sm text-left transition-opacity hover:opacity-85" aria-label="Go to dashboard">
+          <Logo size={30} />
           <span className="leading-none">
-            <span className="block font-display text-[15px] font-bold tracking-wide">
-              TRACE<span className="text-sdtm">·</span>MDR
+            <span className="block font-display text-[14px] font-semibold tracking-tight">
+              Clinical <span className="text-sdtm">MDR</span>
             </span>
-            <span className="mt-0.5 block font-mono text-[8px] uppercase tracking-[0.2em] text-faint">
-              master metadata repository
+            <span className="mt-1 block text-[8.5px] font-medium uppercase tracking-[0.16em] text-faint">
+              Standards and traceability
             </span>
           </span>
         </button>
 
-        <span className="hidden items-center gap-1.5 rounded-md border border-sdtm/30 bg-sdtm/8 px-2.5 py-1.5 lg:flex">
+        <span className="hidden items-center gap-1.5 border-l border-line pl-4 lg:flex">
           <IconShield size={12} className="text-sdtm" />
-          <span className="font-mono text-[9.5px] font-semibold tracking-wide text-sdtm">GxP · 21 CFR PART 11</span>
+          <span className="text-[9.5px] font-semibold tracking-wide text-dim">GxP controlled · 21 CFR Part 11</span>
         </span>
 
         <div className="ml-auto flex items-center gap-2">
-          <div className="hidden md:block"><GlobalSearch /></div>
+          <div className="order-last min-w-full basis-full md:order-none md:min-w-0 md:w-[300px] md:basis-auto"><GlobalSearch /></div>
           <label className="hidden items-center gap-1.5 sm:flex">
-            <span className="hidden font-mono text-[8.5px] uppercase tracking-[0.14em] text-faint xl:block">actor</span>
-            <select value={actor} onChange={(e) => setActor(e.target.value)} className="field-input w-[190px] py-1.5 font-mono text-[10.5px]" title="Signed-in user — attributed on every audited action">
+            <span className="sr-only">Acting as</span>
+            <select value={actor} onChange={(e) => setActor(e.target.value)} className="field-input h-8 w-[204px] py-1 text-[10.5px]" title="Acting user — attributed on every audited action" aria-label="Acting user">
               {ACTORS.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
           </label>
@@ -251,23 +266,23 @@ function Shell() {
               if (arm) { resetDb(); setArm(false); }
               else setArm(true);
             }}
-            className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 font-mono text-[10px] transition-all ${
+            className={`flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 text-[10px] font-medium transition-all ${
               arm ? "border-adam/60 bg-adam/15 text-adam" : "border-line text-dim hover:border-line hover:text-ink"
             }`}
             title="Reset demo data"
           >
             <IconReset size={11} />
-            {arm ? "confirm?" : "reset"}
+            {arm ? "Confirm reset" : "Reset demo"}
           </button>
         </div>
       </header>
 
       <div className="relative z-10 flex min-h-0 flex-1">
         {/* sidebar */}
-        <aside className="hidden w-[190px] shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-panel/80 p-3 md:flex shadow-sm">
+        <aside className="hidden w-[216px] shrink-0 flex-col gap-5 overflow-y-auto border-r border-line bg-panel p-3 md:flex shadow-sm">
           {NAV.map((g) => (
             <nav key={g.group}>
-              <p className="mb-1 px-2 font-mono text-[8.5px] uppercase tracking-[0.2em] text-faint">{g.group}</p>
+              <p className="mb-1 px-2 text-[8.5px] font-semibold uppercase tracking-[0.18em] text-faint">{g.group}</p>
               <ul className="flex flex-col gap-0.5">
                 {g.items.map((n) => {
                   const active = view === n.key;
@@ -275,12 +290,12 @@ function Shell() {
                     <li key={n.key}>
                       <button
                         onClick={() => setView(n.key)}
-                        className={`group relative flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[12px] font-medium transition-all ${
-                          active ? "bg-sdtm/10 text-ink shadow-sm" : "text-dim hover:bg-raise hover:text-ink"
+                        className={`group relative flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[11.5px] font-medium transition-all ${
+                          active ? "bg-sdtm text-white shadow-sm" : "text-dim hover:bg-raise hover:text-ink"
                         }`}
+                        aria-current={active ? "page" : undefined}
                       >
-                        <span className={`absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r transition-all ${active ? "bg-sdtm" : "bg-transparent group-hover:bg-line"}`} />
-                        <span className={active ? "text-sdtm" : ""}>{n.icon}</span>
+                        <span className={active ? "text-white" : "text-sdtm"}>{n.icon}</span>
                         {n.label}
                       </button>
                     </li>
@@ -290,13 +305,13 @@ function Shell() {
             </nav>
           ))}
 
-          <div className="mt-auto rounded-md border border-line bg-raise/60 p-3">
-            <p className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-faint">
-              <IconDb size={11} className="text-sdtm" /> SQLite store
+          <div className="mt-auto rounded-md border border-line bg-raise/55 p-3">
+            <p className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.15em] text-faint">
+              <IconDb size={12} className="text-sdtm" /> Repository status
             </p>
-            <p className="mt-1.5 font-mono text-[10px] text-dim">master-mdr.sqlite</p>
-            <p className="mt-0.5 font-mono text-[9px] leading-relaxed text-faint">
-              browser-persisted · sql.js WASM · append-only audit
+            <p className="mt-2 flex items-center gap-2 text-[10.5px] font-semibold text-ink"><span className="h-2 w-2 rounded-full bg-good" /> Available</p>
+            <p className="mt-1 text-[9.5px] leading-relaxed text-faint">
+              Validated baseline · append-only audit history
             </p>
           </div>
         </aside>
@@ -309,8 +324,9 @@ function Shell() {
                 key={n.key}
                 onClick={() => setView(n.key)}
                 className={`flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-[11px] font-medium transition-colors ${
-                  view === n.key ? "bg-sdtm/10 text-ink" : "text-dim hover:text-ink"
+                  view === n.key ? "bg-sdtm text-white" : "text-dim hover:bg-raise hover:text-ink"
                 }`}
+                aria-current={view === n.key ? "page" : undefined}
               >
                 {n.icon}
                 {n.label}

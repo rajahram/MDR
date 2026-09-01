@@ -37,10 +37,10 @@ export const IconFile = (p: IP) => (
 
 /* ── status lifecycle visuals ─────────────────────────────────── */
 export const STATUS_COLOR: Record<Status, string> = {
-  DRAFT:       "#7a95a8",
-  "IN REVIEW": "#b8720a",
-  ACTIVE:      "#0b9e84",
-  DEPRECATED:  "#c44b28",
+  DRAFT:       "#6f8292",
+  "IN REVIEW": "#b54708",
+  ACTIVE:      "#168a31",
+  DEPRECATED:  "#e01029",
 };
 
 export function StatusBadge({ status, small = false }: { status: string; small?: boolean }) {
@@ -188,7 +188,7 @@ export function StatusModal({
           disabled={!valid}
           onClick={() => onConfirm(to, reason.trim())}
           className="flex items-center gap-2 rounded-md px-4 py-2 text-[12px] font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40"
-          style={{ background: STATUS_COLOR[to], color: "#07141a", boxShadow: valid ? `0 4px 18px ${STATUS_COLOR[to]}33` : "none" }}
+          style={{ background: STATUS_COLOR[to], color: "#ffffff", boxShadow: valid ? `0 4px 18px ${STATUS_COLOR[to]}33` : "none" }}
         >
           <IconPen size={13} />
           Confirm {to.toLowerCase()}
@@ -242,7 +242,7 @@ export function ReasonModal({
 }
 
 /* ── small stat card ──────────────────────────────────────────── */
-export function StatCard({ label, value, sub, color = "#0b9e84" }: { label: string; value: number; sub?: string; color?: string }) {
+export function StatCard({ label, value, sub, color = "#0063c3" }: { label: string; value: number; sub?: string; color?: string }) {
   return (
     <div className="group rounded-lg border border-line bg-panel px-4 py-3.5 shadow-xs transition-all hover:-translate-y-0.5 hover:border-line hover:shadow-md hover:shadow-slate-200/80">
       <p className="font-mono text-[9.5px] uppercase tracking-[0.16em] text-faint">{label}</p>

@@ -108,16 +108,11 @@ export const IconDot = (p: IP) => (
 export function Logo({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <circle cx="6" cy="16" r="3.4" fill="#f2ac3c" />
-      <circle cx="16" cy="7" r="3.4" fill="#38c7a6" />
-      <circle cx="16" cy="25" r="3.4" fill="#f27059" />
-      <circle cx="26" cy="16" r="3.4" fill="#7fa6e8" />
-      <path
-        d="M8.8 14.4 13.2 8.9M8.8 17.6 13.2 23.1M18.8 8.9 23.2 14.4M18.8 23.1 23.2 17.6M16 10.4v11.2"
-        stroke="#3d5f6b"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      />
+      <path d="M6 6.5h8.5v8.5H6z" fill="#0063C3" />
+      <path d="M17.5 6.5H26V15h-8.5z" fill="#00BCE4" />
+      <path d="M6 18h8.5v7.5H6z" fill="#151F6D" />
+      <path d="M17.5 18H26v7.5h-8.5z" fill="#7EE0DD" />
+      <path d="M14.5 10.75h3M10.25 15v3M21.75 15v3M14.5 21.75h3" stroke="#0063C3" strokeWidth="1.5" />
     </svg>
   );
 }
@@ -297,9 +292,9 @@ export function ToastHost() {
           key={t.id}
           className={`toast-in pointer-events-auto flex items-start gap-2.5 rounded-md border px-3.5 py-3 shadow-xl shadow-black/40 backdrop-blur-sm ${
             t.kind === "success"
-              ? "border-sdtm/40 bg-[#0d2b26]/95"
+              ? "border-sdtm/40 bg-white/98"
               : t.kind === "warn"
-                ? "border-crf/40 bg-[#2b220d]/95"
+                ? "border-crf/40 bg-white/98"
                 : "border-line bg-panel/95"
           }`}
         >
